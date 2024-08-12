@@ -10,7 +10,7 @@ services:
   postgres:
     image: ghcr.io/baosystems/postgis:15-3.3 # see https://github.com/postgis/docker-postgis/issues/216
     volumes:
-      - ./init_dbs.sql:/docker-entrypoint-initdb.d/dev_dbs.sql
+      - ./postgres/init_dbs.sql:/docker-entrypoint-initdb.d/dev_dbs.sql
       - postgres:/var/lib/postgresql/data
     ports:
       - 5432:5432
