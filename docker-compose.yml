@@ -69,6 +69,7 @@ services:
       context: ./rapidpro/
       args:
         - RAPIDPRO_TAG=v9.2.5
+    command: ["webapp"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,17 +83,18 @@ services:
       - 8000:8000
     healthcheck:
       test: curl -s http://localhost:8000 >/dev/null || exit 1
-      interval: 20s
+      interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   celery:
     image: nyaruka/rapidpro:stable
-    command: ["/venv/bin/celery", "--beat", "--app=temba", "worker", "--loglevel=INFO", "--queues=celery"]
     build:
       context: ./rapidpro/
       args:
         - RAPIDPRO_TAG=v9.2.5
+    command: ["celery"]
     depends_on:
       rapidpro:
         condition: service_healthy
