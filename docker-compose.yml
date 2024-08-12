@@ -17,7 +17,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=tembatemba
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       timeout: 5s
 
@@ -33,7 +33,7 @@ services:
       - ingest.geoip.downloader.enabled=false
       - logger.level=INFO
     healthcheck:
-      test: curl -s http://elastic:9200 >/dev/null || exit 1
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
       interval: 10s
       timeout: 5s
 
@@ -45,7 +45,7 @@ services:
     ports:
       - 6379:6379
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 2s
 
@@ -60,6 +60,8 @@ services:
       - MINIO_ROOT_USER=root
       - MINIO_ROOT_PASSWORD=tembatemba
       - MINIO_DEFAULT_BUCKETS=temba-attachments,temba-sessions,temba-logs,temba-archives
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
 
   rapidpro:
     image: nyaruka/rapidpro:stable
@@ -74,10 +76,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     ports:
       - 8000:8000
     healthcheck:
-      test: curl -s http://rapidpro:8000 >/dev/null || exit 1
+      test: curl -s http://localhost:8000 >/dev/null || exit 1
       interval: 10s
       timeout: 5s
 
@@ -110,8 +114,14 @@ services:
       - MAILROOM_DOMAIN=${MAILROOM_DOMAIN:-host.docker.internal}
       - MAILROOM_ATTACHMENT_DOMAIN=${MAILROOM_ATTACHMENT_DOMAIN:-host.docker.internal}
       - MAILROOM_DISALLOWED_NETWORKS=6.6.6.6
+      - MAILROOM_AWS_ACCESS_KEY_ID=root
+      - MAILROOM_AWS_SECRET_ACCESS_KEY=tembatemba
       - MAILROOM_S3_ENDPOINT=http://minio:9000
+      - MAILROOM_S3_SESSIONS_BUCKET=temba-sessions
+      - MAILROOM_S3_ATTACHMENTS_BUCKET=temba-attachments
+      - MAILROOM_S3_LOGS_BUCKET=temba-logs
       - MAILROOM_S3_FORCE_PATH_STYLE=true
+      - MAILROOM_LOG_LEVEL=info
 
   courier:
     image: nyaruka/courier:stable
@@ -119,9 +129,7 @@ services:
       context: https://github.com/nyaruka/courier.git#v9.2.1
       dockerfile: Dockerfile
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
+      rapidpro:
         condition: service_healthy
     ports:
       - 8080:8080
@@ -135,7 +143,10 @@ services:
       - COURIER_AWS_ACCESS_KEY_ID=root
       - COURIER_AWS_SECRET_ACCESS_KEY=tembatemba
       - COURIER_S3_ENDPOINT=http://minio:9000
+      - COURIER_S3_ATTACHMENTS_BUCKET=temba-attachments
+      - COURIER_S3_LOGS_BUCKET=temba-logs
       - COURIER_S3_FORCE_PATH_STYLE=true
+      - COURIER_LOG_LEVEL=info
 
   indexer:
     image: nyaruka/indexer:stable
@@ -145,11 +156,10 @@ services:
     depends_on:
       rapidpro:
         condition: service_healthy
-      elastic:
-        condition: service_healthy
     environment:
       - INDEXER_DB=postgres://temba:temba@postgres:5432/temba?sslmode=disable
       - INDEXER_ELASTIC_URL=http://elastic:9200
+      - INDEXER_LOG_LEVEL=info
 
 volumes:
   postgres:
