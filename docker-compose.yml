@@ -81,6 +81,8 @@ services:
         condition: service_healthy
     ports:
       - 8000:8000
+    environment:
+      - MAILROOM_URL=http://mailroom:8090
     healthcheck:
       test: curl -s http://localhost:8000 >/dev/null || exit 1
       interval: 15s
@@ -98,6 +100,8 @@ services:
     depends_on:
       rapidpro:
         condition: service_healthy
+    environment:
+      - MAILROOM_URL=http://mailroom:8090
 
   mailroom:
     image: nyaruka/mailroom:stable
