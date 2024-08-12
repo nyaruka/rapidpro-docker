@@ -143,7 +143,7 @@ services:
       context: https://github.com/nyaruka/rp-indexer.git#v9.2.0
       dockerfile: Dockerfile
     depends_on:
-      postgres:
+      rapidpro:
         condition: service_healthy
       elastic:
         condition: service_healthy
