@@ -63,7 +63,7 @@ services:
 
   rapidpro:
     image: nyaruka/rapidpro:stable
-    build: 
+    build:
       context: ./rapidpro/
       args:
         - RAPIDPRO_TAG=v9.2.5
@@ -80,6 +80,17 @@ services:
       test: curl -s http://rapidpro:8000 >/dev/null || exit 1
       interval: 10s
       timeout: 5s
+
+  celery:
+    image: nyaruka/rapidpro:stable
+    command: ["/venv/bin/celery", "--beat", "--app=temba", "worker", "--loglevel=INFO", "--queues=celery"]
+    build:
+      context: ./rapidpro/
+      args:
+        - RAPIDPRO_TAG=v9.2.5
+    depends_on:
+      rapidpro:
+        condition: service_healthy
 
   mailroom:
     image: nyaruka/mailroom:stable
