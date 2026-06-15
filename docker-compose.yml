@@ -129,7 +129,7 @@ services:
       MAILROOM_ATTACHMENT_DOMAIN: ${MAILROOM_ATTACHMENT_DOMAIN:-host.docker.internal}
       MAILROOM_DISALLOWED_NETWORKS: 6.6.6.6
       MAILROOM_AUTH_TOKEN: topsecret
-      MAILROOM_COURIER_ENDPOINT: http://courier:8080
+      MAILROOM_COURIER_ENDPOINT: http://courier:8081
       MAILROOM_COURIER_AUTH_TOKEN: topsecret
       MAILROOM_AWS_ACCESS_KEY_ID: root
       MAILROOM_AWS_SECRET_ACCESS_KEY: tembatemba
@@ -143,19 +143,20 @@ services:
   courier:
     image: nyaruka/courier:stable
     build: 
-      context: https://github.com/nyaruka/courier.git#v26.0.1
+      context: https://github.com/nyaruka/courier.git#v26.2.0
       dockerfile: Dockerfile
     depends_on:
       rapidpro:
         condition: service_healthy
     ports:
       - 8080:8080
+      - 8081:8081
     environment:
-      COURIER_ADDRESS: 0.0.0.0
+      COURIER_PUBLIC_ADDRESS: 0.0.0.0
+      COURIER_INTERNAL_ADDRESS: 0.0.0.0
       COURIER_DB: postgres://temba:temba@postgres:5432/temba?sslmode=disable
       COURIER_VALKEY: valkey://valkey:6379/15
       COURIER_DOMAIN: ${COURIER_DOMAIN:-host.docker.internal}
-      COURIER_BASE_URL: ${COURIER_BASE_URL:-https://host.docker.internal}
       COURIER_DISALLOWED_NETWORKS: 6.6.6.6
       COURIER_AUTH_TOKEN: topsecret
       COURIER_AWS_ACCESS_KEY_ID: root
