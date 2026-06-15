@@ -168,6 +168,26 @@ services:
       COURIER_S3_PATH_STYLE: true
       COURIER_LOG_LEVEL: info
 
+  archiver:
+    image: nyaruka/archiver:stable
+    build:
+      context: https://github.com/nyaruka/archiver.git#v26.2.0
+      dockerfile: Dockerfile
+    depends_on:
+      rapidpro:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: root
+      AWS_SECRET_ACCESS_KEY: tembatemba
+      ARCHIVER_DB: postgres://temba:temba@postgres:5432/temba?sslmode=disable
+      ARCHIVER_VALKEY: valkey://valkey:6379/15
+      ARCHIVER_AWS_REGION: us-east-1
+      ARCHIVER_S3_ENDPOINT: http://localstack:4566
+      ARCHIVER_S3_BUCKET: temba-archives
+      ARCHIVER_S3_PATH_STYLE: true
+      ARCHIVER_CHECK_S3_HASHES: false
+      ARCHIVER_LOG_LEVEL: info
+
 volumes:
   postgres:
     driver: local
