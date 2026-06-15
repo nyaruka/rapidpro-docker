@@ -50,7 +50,7 @@ services:
       timeout: 2s
 
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:4.14.0
     volumes:
       - ./localstack/init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh
       - localstack:/var/lib/localstack
