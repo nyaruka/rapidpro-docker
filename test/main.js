@@ -62,7 +62,7 @@ const puppeteer = require('puppeteer');
         await fillField('#id_last_name', testData.lastName, 'Last name');
         await fillField('#id_email', testData.email, 'Email');
         await fillField('#id_password1', testData.password, 'Password');
-        await fillField('#id_workspace', testData.organization, 'Workspace');
+        await fillField('#id_name', testData.organization, 'Workspace');
 
         await clickButton('button[type="submit"]', 'Sign Up');
 
