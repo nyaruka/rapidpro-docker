@@ -71,7 +71,7 @@ services:
     build:
       context: ./rapidpro/
       args:
-        - RAPIDPRO_TAG=v26.0.0
+        - RAPIDPRO_TAG=v26.2.0
     command: ["webapp"]
     depends_on:
       postgres:
@@ -85,7 +85,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      MAILROOM_URL: http://mailroom:8090
+      MAILROOM_URL: http://mailroom:8091
       MAILROOM_AUTH_TOKEN: topsecret
     healthcheck:
       test: curl -s http://localhost:8000 >/dev/null || exit 1
@@ -99,41 +99,43 @@ services:
     build:
       context: ./rapidpro/
       args:
-        - RAPIDPRO_TAG=v26.0.0
+        - RAPIDPRO_TAG=v26.2.0
     command: ["celery"]
     depends_on:
       rapidpro:
         condition: service_healthy
     environment:
-      MAILROOM_URL: http://mailroom:8090
+      MAILROOM_URL: http://mailroom:8091
       MAILROOM_AUTH_TOKEN: topsecret
 
   mailroom:
     image: nyaruka/mailroom:stable
-    build: 
-      context: https://github.com/nyaruka/mailroom.git#v26.0.0
+    build:
+      context: https://github.com/nyaruka/mailroom.git#v26.2.0
       dockerfile: Dockerfile
     depends_on:
       rapidpro:
         condition: service_healthy
     ports:
       - 8090:8090
+      - 8091:8091
     environment:
-      MAILROOM_ADDRESS: 0.0.0.0
+      MAILROOM_PUBLIC_ADDRESS: 0.0.0.0
+      MAILROOM_INTERNAL_ADDRESS: 0.0.0.0
       MAILROOM_DB: postgres://temba:temba@postgres:5432/temba?sslmode=disable
       MAILROOM_VALKEY: valkey://valkey:6379/15
-      MAILROOM_ELASTIC: http://elastic:9200
+      MAILROOM_ELASTIC_ENDPOINT: http://elastic:9200
       MAILROOM_DOMAIN: ${MAILROOM_DOMAIN:-host.docker.internal}
       MAILROOM_ATTACHMENT_DOMAIN: ${MAILROOM_ATTACHMENT_DOMAIN:-host.docker.internal}
       MAILROOM_DISALLOWED_NETWORKS: 6.6.6.6
       MAILROOM_AUTH_TOKEN: topsecret
+      MAILROOM_COURIER_ENDPOINT: http://courier:8080
       MAILROOM_COURIER_AUTH_TOKEN: topsecret
       MAILROOM_AWS_ACCESS_KEY_ID: root
       MAILROOM_AWS_SECRET_ACCESS_KEY: tembatemba
       MAILROOM_DYNAMO_ENDPOINT: http://localstack:4566
       MAILROOM_DYNAMO_TABLE_PREFIX: Temba
       MAILROOM_S3_ENDPOINT: http://localstack:4566
-      MAILROOM_S3_SESSIONS_BUCKET: temba-sessions
       MAILROOM_S3_ATTACHMENTS_BUCKET: temba-attachments
       MAILROOM_S3_PATH_STYLE: true
       MAILROOM_LOG_LEVEL: info
@@ -164,19 +166,6 @@ services:
       COURIER_S3_ATTACHMENTS_BUCKET: temba-attachments
       COURIER_S3_PATH_STYLE: true
       COURIER_LOG_LEVEL: info
-
-  indexer:
-    image: nyaruka/indexer:stable
-    build: 
-      context: https://github.com/nyaruka/rp-indexer.git#v26.0.1
-      dockerfile: Dockerfile
-    depends_on:
-      rapidpro:
-        condition: service_healthy
-    environment:
-      INDEXER_DB: postgres://temba:temba@postgres:5432/temba?sslmode=disable
-      INDEXER_ELASTIC_URL: http://elastic:9200
-      INDEXER_LOG_LEVEL: info
 
 volumes:
   postgres:
