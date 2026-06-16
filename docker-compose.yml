@@ -175,6 +175,13 @@ services:
       COURIER_S3_ATTACHMENTS_BUCKET: temba-attachments
       COURIER_S3_PATH_STYLE: true
       COURIER_LOG_LEVEL: info
+    healthcheck:
+      # probe the internal listener (port 8081) - the one mailroom sends messages to
+      test: curl -s http://localhost:8081/ >/dev/null || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   archiver:
     image: nyaruka/archiver:stable
