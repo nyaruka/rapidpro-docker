@@ -8,7 +8,7 @@ services:
       - 80:80
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:15-alpine
     volumes:
       - ./postgres/init_dbs.sql:/docker-entrypoint-initdb.d/dev_dbs.sql
       - postgres:/var/lib/postgresql/data
