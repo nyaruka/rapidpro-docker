@@ -33,13 +33,15 @@ async function getConfirmationPath() {
 // Exercises the full rapidpro -> mailroom -> elasticsearch search path from the UI. A contact
 // search makes rapidpro's mailroom client POST to mailroom's /mi/contact/search endpoint, which
 // in turn queries Elasticsearch. The contact list view only catches query-validation errors, so
-// a break anywhere in that chain surfaces here as an HTTP 500. Mailroom has no compose
-// healthcheck and only starts once rapidpro is healthy, so we retry to give it time to come up.
+// a break anywhere in that chain surfaces here as an HTTP 500. Mailroom has a compose healthcheck
+// and CI brings the stack up with `--wait`, so it should already be ready here; the few retries
+// just cover a stack started without `--wait` (e.g. a local run).
 async function checkContactSearchPipeline(page) {
     const searchUrl = `${BASE_URL}/contact/?search=test`;
+    const maxAttempts = 3;
 
     let lastStatus;
-    for (let attempt = 0; attempt < 10; attempt++) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const response = await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
         lastStatus = response ? response.status() : 0;
 
@@ -69,11 +71,11 @@ async function checkContactSearchPipeline(page) {
             return;
         }
 
-        console.log(`Mailroom not ready yet (HTTP ${lastStatus}), retrying... [${attempt + 1}/10]`);
+        console.log(`Search pipeline not ready yet (HTTP ${lastStatus}), retrying... [${attempt}/${maxAttempts}]`);
         await sleep(3000);
     }
 
-    throw new Error(`Contact search never succeeded - rapidpro could not reach mailroom (last HTTP ${lastStatus})`);
+    throw new Error(`Contact search never succeeded - the rapidpro -> mailroom -> elasticsearch path is broken (last HTTP ${lastStatus})`);
 }
 
 (async () => {

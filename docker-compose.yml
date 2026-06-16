@@ -140,6 +140,13 @@ services:
       MAILROOM_S3_ATTACHMENTS_BUCKET: temba-attachments
       MAILROOM_S3_PATH_STYLE: true
       MAILROOM_LOG_LEVEL: info
+    healthcheck:
+      # probe the internal listener (port 8091) - the one rapidpro's mailroom client talks to
+      test: curl -s http://localhost:8091/ >/dev/null || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   courier:
     image: nyaruka/courier:stable
