@@ -140,6 +140,13 @@ services:
       MAILROOM_S3_ATTACHMENTS_BUCKET: temba-attachments
       MAILROOM_S3_PATH_STYLE: true
       MAILROOM_LOG_LEVEL: info
+    healthcheck:
+      # both listeners serve health at / - require the public (8090) and internal (8091) ports
+      test: curl -s http://localhost:8090/ >/dev/null && curl -s http://localhost:8091/ >/dev/null || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   courier:
     image: nyaruka/courier:stable
@@ -168,6 +175,13 @@ services:
       COURIER_S3_ATTACHMENTS_BUCKET: temba-attachments
       COURIER_S3_PATH_STYLE: true
       COURIER_LOG_LEVEL: info
+    healthcheck:
+      # both listeners serve health at / - require the public (8080) and internal (8081) ports
+      test: curl -s http://localhost:8080/ >/dev/null && curl -s http://localhost:8081/ >/dev/null || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   archiver:
     image: nyaruka/archiver:stable
