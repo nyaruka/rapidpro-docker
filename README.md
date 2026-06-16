@@ -6,18 +6,19 @@
 > [!IMPORTANT]  
 > These example containers are for development and documentation purposes only, and are not intended for production deployments.
 
-Docker compose for stable release versions of RapidPro.
+Docker compose for public snapshot versions of [RapidPro](https://app.rapidpro.io).
 
 Includes:
  - RapidPro webapp and celery worker ([License](https://github.com/nyaruka/rapidpro/blob/main/LICENSE))
  - Mailroom ([License](https://github.com/nyaruka/mailroom/blob/main/LICENSE))
  - Courier ([License](https://github.com/nyaruka/courier/blob/main/LICENSE))
- - Indexer ([License](https://github.com/nyaruka/rp-indexer/blob/main/LICENSE))
+ - Archiver ([License](https://github.com/nyaruka/archiver/blob/main/LICENSE))
  - nginx
  - PostgreSQL
  - Elasticsearch
  - Valkey
  - Localstack (provides DynamoDB, S3 and Cloudwatch)
+ - Squid (forward proxy for mailroom and courier outgoing calls to user-configured URLs)
 
 ## Usage
 
