@@ -18,7 +18,7 @@ Includes:
  - Elasticsearch
  - Valkey
  - Localstack (provides DynamoDB, S3 and Cloudwatch)
- - Squid (forward proxy for mailroom's outgoing webhook calls)
+ - Squid (forward proxy for mailroom and courier outgoing calls to user-configured URLs)
 
 ## Usage
 

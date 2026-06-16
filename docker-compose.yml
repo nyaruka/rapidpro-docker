@@ -169,6 +169,8 @@ services:
     depends_on:
       rapidpro:
         condition: service_healthy
+      squid:
+        condition: service_healthy
     ports:
       - 8080:8080
       - 8081:8081
@@ -179,6 +181,7 @@ services:
       COURIER_VALKEY: valkey://valkey:6379/15
       COURIER_DOMAIN: ${COURIER_DOMAIN:-host.docker.internal}
       COURIER_DISALLOWED_NETWORKS: 6.6.6.6
+      COURIER_SEND_PROXY_URL: http://squid:3128
       COURIER_AUTH_TOKEN: topsecret
       COURIER_AWS_ACCESS_KEY_ID: root
       COURIER_AWS_SECRET_ACCESS_KEY: tembatemba
