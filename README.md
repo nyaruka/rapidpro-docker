@@ -6,7 +6,7 @@
 > [!IMPORTANT]  
 > These example containers are for development and documentation purposes only, and are not intended for production deployments.
 
-Docker compose for public snapshot versions of RapidPro.
+Docker compose for public snapshot versions of [RapidPro](https://app.rapidpro.io).
 
 Includes:
  - RapidPro webapp and celery worker ([License](https://github.com/nyaruka/rapidpro/blob/main/LICENSE))
