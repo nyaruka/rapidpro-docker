@@ -30,13 +30,12 @@ async function getConfirmationPath() {
     throw new Error('No email confirmation link found in rapidpro logs');
 }
 
-// Exercises the rapidpro -> mailroom link from the UI. A contact search makes rapidpro's
-// mailroom client POST to mailroom's /mi/contact/search endpoint, which in turn queries
-// Elasticsearch. The contact list view only catches query-validation errors, so a broken
-// rapidpro<->mailroom (or mailroom<->elastic) connection surfaces here as an HTTP 500.
-// Mailroom has no compose healthcheck and only starts once rapidpro is healthy, so we retry
-// to give it time to come up.
-async function checkMailroomConnectivity(page) {
+// Exercises the full rapidpro -> mailroom -> elasticsearch search path from the UI. A contact
+// search makes rapidpro's mailroom client POST to mailroom's /mi/contact/search endpoint, which
+// in turn queries Elasticsearch. The contact list view only catches query-validation errors, so
+// a break anywhere in that chain surfaces here as an HTTP 500. Mailroom has no compose
+// healthcheck and only starts once rapidpro is healthy, so we retry to give it time to come up.
+async function checkContactSearchPipeline(page) {
     const searchUrl = `${BASE_URL}/contact/?search=test`;
 
     let lastStatus;
@@ -66,7 +65,7 @@ async function checkMailroomConnectivity(page) {
                 throw new Error(`Contact search did not round-trip through mailroom (search box shows "${parsed}")`);
             }
 
-            console.log(`✓ Contact search reached mailroom (parsed query: "${parsed}")`);
+            console.log(`✓ Contact search round-tripped rapidpro → mailroom → elasticsearch (parsed query: "${parsed}")`);
             return;
         }
 
@@ -163,8 +162,8 @@ async function checkMailroomConnectivity(page) {
         await page.goto(`${BASE_URL}/flow/`, { waitUntil: 'networkidle2', timeout: 30000 });
         console.log('Flow list page loaded successfully');
 
-        // --- Step 5: confirm rapidpro can reach mailroom's web endpoints ---
-        await checkMailroomConnectivity(page);
+        // --- Step 5: confirm the rapidpro -> mailroom -> elasticsearch search path works ---
+        await checkContactSearchPipeline(page);
 
         console.log('✓ Test passed');
 
