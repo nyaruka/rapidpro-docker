@@ -141,8 +141,8 @@ services:
       MAILROOM_S3_PATH_STYLE: true
       MAILROOM_LOG_LEVEL: info
     healthcheck:
-      # probe the internal listener (port 8091) - the one rapidpro's mailroom client talks to
-      test: curl -s http://localhost:8091/ >/dev/null || exit 1
+      # both listeners serve health at / - require the public (8090) and internal (8091) ports
+      test: curl -s http://localhost:8090/ >/dev/null && curl -s http://localhost:8091/ >/dev/null || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
@@ -176,8 +176,8 @@ services:
       COURIER_S3_PATH_STYLE: true
       COURIER_LOG_LEVEL: info
     healthcheck:
-      # probe the internal listener (port 8081) - the one mailroom sends messages to
-      test: curl -s http://localhost:8081/ >/dev/null || exit 1
+      # both listeners serve health at / - require the public (8080) and internal (8081) ports
+      test: curl -s http://localhost:8080/ >/dev/null && curl -s http://localhost:8081/ >/dev/null || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
