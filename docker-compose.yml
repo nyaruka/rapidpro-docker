@@ -22,7 +22,7 @@ services:
       timeout: 5s
 
   elastic:
-    image: elasticsearch:8.14.0
+    image: elasticsearch:9.3.3
     volumes:
       - elastic:/usr/share/elasticsearch/data
     ports:
@@ -30,6 +30,7 @@ services:
     environment:
       discovery.type: single-node
       xpack.security.enabled: false
+      xpack.ml.enabled: false
       ingest.geoip.downloader.enabled: false
       logger.level: INFO
     healthcheck:
