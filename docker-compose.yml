@@ -82,7 +82,7 @@ services:
     build:
       context: ./rapidpro/
       args:
-        - RAPIDPRO_TAG=v26.2.0
+        - RAPIDPRO_TAG=v26.2.1
     command: ["webapp"]
     depends_on:
       postgres:
@@ -110,7 +110,7 @@ services:
     build:
       context: ./rapidpro/
       args:
-        - RAPIDPRO_TAG=v26.2.0
+        - RAPIDPRO_TAG=v26.2.1
     command: ["celery"]
     depends_on:
       rapidpro:
@@ -164,7 +164,7 @@ services:
   courier:
     image: nyaruka/courier:stable
     build: 
-      context: https://github.com/nyaruka/courier.git#v26.2.0
+      context: https://github.com/nyaruka/courier.git#v26.2.1
       dockerfile: Dockerfile
     depends_on:
       rapidpro:
