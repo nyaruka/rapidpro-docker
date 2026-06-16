@@ -33,49 +33,36 @@ async function getConfirmationPath() {
 // Exercises the full rapidpro -> mailroom -> elasticsearch search path from the UI. A contact
 // search makes rapidpro's mailroom client POST to mailroom's /mi/contact/search endpoint, which
 // in turn queries Elasticsearch. The contact list view only catches query-validation errors, so
-// a break anywhere in that chain surfaces here as an HTTP 500. Mailroom has a compose healthcheck
-// and CI brings the stack up with `--wait`, so it should already be ready here; the few retries
-// just cover a stack started without `--wait` (e.g. a local run).
+// a break anywhere in that chain surfaces here as an HTTP 500. No retry/wait needed: the stack is
+// brought up with `docker compose up --wait`, so mailroom and elasticsearch are already healthy.
 async function checkContactSearchPipeline(page) {
-    const searchUrl = `${BASE_URL}/contact/?search=test`;
-    const maxAttempts = 3;
+    const response = await page.goto(`${BASE_URL}/contact/?search=test`, { waitUntil: 'networkidle2', timeout: 30000 });
+    const status = response ? response.status() : 0;
 
-    let lastStatus;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const response = await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-        lastStatus = response ? response.status() : 0;
-
-        // guard against a login redirect (e.g. /accounts/login/?next=/contact/...) false-passing
-        const onContactsPage = new URL(page.url()).pathname.startsWith('/contact/');
-
-        if (lastStatus === 200 && onContactsPage) {
-            const errorBanner = await page.$('.alert-error');
-            if (errorBanner) {
-                const errorText = await page.$eval('.alert-error', (el) => el.textContent.trim()).catch(() => '');
-                throw new Error(`Contact search returned an error: ${errorText}`);
-            }
-
-            // Mailroom parses "test" into a structured query (e.g. name ~ "test") and the view
-            // echoes that parsed form back into the search box. Seeing the parsed form (rather than
-            // the raw term) proves the search actually round-tripped through mailroom and wasn't
-            // just rendered locally.
-            const parsed = await page
-                .$eval('[name="search"]', (el) => el.getAttribute('value') || el.value || '')
-                .catch(() => '');
-
-            if (!parsed || parsed.trim() === 'test') {
-                throw new Error(`Contact search did not round-trip through mailroom (search box shows "${parsed}")`);
-            }
-
-            console.log(`✓ Contact search round-tripped rapidpro → mailroom → elasticsearch (parsed query: "${parsed}")`);
-            return;
-        }
-
-        console.log(`Search pipeline not ready yet (HTTP ${lastStatus}), retrying... [${attempt}/${maxAttempts}]`);
-        await sleep(3000);
+    // a transport failure anywhere in the chain is an uncaught 500; a login redirect would leave us
+    // off the contacts page (guards against a false pass)
+    const onContactsPage = new URL(page.url()).pathname.startsWith('/contact/');
+    if (status !== 200 || !onContactsPage) {
+        throw new Error(`Contact search failed - the rapidpro -> mailroom -> elasticsearch path is broken (HTTP ${status}, url ${page.url()})`);
     }
 
-    throw new Error(`Contact search never succeeded - the rapidpro -> mailroom -> elasticsearch path is broken (last HTTP ${lastStatus})`);
+    const errorBanner = await page.$('.alert-error');
+    if (errorBanner) {
+        const errorText = await page.$eval('.alert-error', (el) => el.textContent.trim()).catch(() => '');
+        throw new Error(`Contact search returned an error: ${errorText}`);
+    }
+
+    // Mailroom parses "test" into a structured query (e.g. name ~ "test") and the view echoes that
+    // parsed form back into the search box. Seeing the parsed form (rather than the raw term) proves
+    // the search actually round-tripped through mailroom and wasn't just rendered locally.
+    const parsed = await page
+        .$eval('[name="search"]', (el) => el.getAttribute('value') || el.value || '')
+        .catch(() => '');
+    if (!parsed || parsed.trim() === 'test') {
+        throw new Error(`Contact search did not round-trip through mailroom (search box shows "${parsed}")`);
+    }
+
+    console.log(`✓ Contact search round-tripped rapidpro → mailroom → elasticsearch (parsed query: "${parsed}")`);
 }
 
 (async () => {
