@@ -14,6 +14,7 @@ RUN wget -O rapidpro.tar.gz "https://github.com/nyaruka/rapidpro/archive/${RAPID
 RUN uv venv && uv sync --frozen
 RUN yarn install
 RUN ln -s /rapidpro/temba/settings.py.dev /rapidpro/temba/settings.py
+COPY settings_local.py /rapidpro/temba/settings_local.py
 
 EXPOSE 8000
 COPY entrypoint.sh /rapidpro/
