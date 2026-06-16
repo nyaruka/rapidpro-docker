@@ -30,6 +30,53 @@ async function getConfirmationPath() {
     throw new Error('No email confirmation link found in rapidpro logs');
 }
 
+// Exercises the rapidpro -> mailroom link from the UI. A contact search makes rapidpro's
+// mailroom client POST to mailroom's /mi/contact/search endpoint, which in turn queries
+// Elasticsearch. The contact list view only catches query-validation errors, so a broken
+// rapidpro<->mailroom (or mailroom<->elastic) connection surfaces here as an HTTP 500.
+// Mailroom has no compose healthcheck and only starts once rapidpro is healthy, so we retry
+// to give it time to come up.
+async function checkMailroomConnectivity(page) {
+    const searchUrl = `${BASE_URL}/contact/?search=test`;
+
+    let lastStatus;
+    for (let attempt = 0; attempt < 10; attempt++) {
+        const response = await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+        lastStatus = response ? response.status() : 0;
+
+        // guard against a login redirect (e.g. /accounts/login/?next=/contact/...) false-passing
+        const onContactsPage = new URL(page.url()).pathname.startsWith('/contact/');
+
+        if (lastStatus === 200 && onContactsPage) {
+            const errorBanner = await page.$('.alert-error');
+            if (errorBanner) {
+                const errorText = await page.$eval('.alert-error', (el) => el.textContent.trim()).catch(() => '');
+                throw new Error(`Contact search returned an error: ${errorText}`);
+            }
+
+            // Mailroom parses "test" into a structured query (e.g. name ~ "test") and the view
+            // echoes that parsed form back into the search box. Seeing the parsed form (rather than
+            // the raw term) proves the search actually round-tripped through mailroom and wasn't
+            // just rendered locally.
+            const parsed = await page
+                .$eval('[name="search"]', (el) => el.getAttribute('value') || el.value || '')
+                .catch(() => '');
+
+            if (!parsed || parsed.trim() === 'test') {
+                throw new Error(`Contact search did not round-trip through mailroom (search box shows "${parsed}")`);
+            }
+
+            console.log(`✓ Contact search reached mailroom (parsed query: "${parsed}")`);
+            return;
+        }
+
+        console.log(`Mailroom not ready yet (HTTP ${lastStatus}), retrying... [${attempt + 1}/10]`);
+        await sleep(3000);
+    }
+
+    throw new Error(`Contact search never succeeded - rapidpro could not reach mailroom (last HTTP ${lastStatus})`);
+}
+
 (async () => {
     console.log('Starting test...');
 
@@ -115,6 +162,10 @@ async function getConfirmationPath() {
         // --- Step 4: confirm the app is usable ---
         await page.goto(`${BASE_URL}/flow/`, { waitUntil: 'networkidle2', timeout: 30000 });
         console.log('Flow list page loaded successfully');
+
+        // --- Step 5: confirm rapidpro can reach mailroom's web endpoints ---
+        await checkMailroomConnectivity(page);
+
         console.log('✓ Test passed');
 
     } catch (error) {
