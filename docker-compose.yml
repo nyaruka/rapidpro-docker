@@ -39,7 +39,7 @@ services:
       timeout: 5s
 
   valkey:
-    image: valkey/valkey:8.0-alpine
+    image: valkey/valkey:8.1-alpine
     command: valkey-server --save 60 1 --loglevel warning
     volumes:
       - valkey:/data
@@ -66,6 +66,16 @@ services:
       test: ["CMD-SHELL", "curl -s http://localhost:4566/_localstack/health >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
+
+  squid:
+    build:
+      context: ./squid/
+    ports:
+      - 3128:3128
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3128 || exit 1"]
+      interval: 5s
+      timeout: 2s
 
   rapidpro:
     image: nyaruka/rapidpro:stable
@@ -117,6 +127,8 @@ services:
     depends_on:
       rapidpro:
         condition: service_healthy
+      squid:
+        condition: service_healthy
     ports:
       - 8090:8090
       - 8091:8091
@@ -129,6 +141,7 @@ services:
       MAILROOM_DOMAIN: ${MAILROOM_DOMAIN:-host.docker.internal}
       MAILROOM_ATTACHMENT_DOMAIN: ${MAILROOM_ATTACHMENT_DOMAIN:-host.docker.internal}
       MAILROOM_DISALLOWED_NETWORKS: 6.6.6.6
+      MAILROOM_WEBHOOK_PROXY_URL: http://squid:3128
       MAILROOM_AUTH_TOKEN: topsecret
       MAILROOM_COURIER_ENDPOINT: http://courier:8081
       MAILROOM_COURIER_AUTH_TOKEN: topsecret
