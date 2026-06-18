@@ -82,7 +82,7 @@ services:
     build:
       context: ./rapidpro/
       args:
-        - RAPIDPRO_TAG=v26.2.1
+        - RAPIDPRO_TAG=v26.2.2
     command: ["webapp"]
     depends_on:
       postgres:
@@ -110,7 +110,7 @@ services:
     build:
       context: ./rapidpro/
       args:
-        - RAPIDPRO_TAG=v26.2.1
+        - RAPIDPRO_TAG=v26.2.2
     command: ["celery"]
     depends_on:
       rapidpro:
