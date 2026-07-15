@@ -12,7 +12,7 @@ Includes:
  - RapidPro webapp and celery worker ([License](https://github.com/nyaruka/rapidpro/blob/main/LICENSE))
  - Mailroom ([License](https://github.com/nyaruka/mailroom/blob/main/LICENSE))
  - Courier ([License](https://github.com/nyaruka/courier/blob/main/LICENSE))
- - Archiver ([License](https://github.com/nyaruka/archiver/blob/main/LICENSE))
+ - Archiver ([License](https://github.com/nyaruka/rp-archiver/blob/main/LICENSE))
  - nginx
  - PostgreSQL
  - Elasticsearch
